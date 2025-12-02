@@ -310,14 +310,14 @@ body.modal-open { overflow: hidden; }
 
 <script>
 // ==========================================================
-// >>> ⚠️ PENTING: GANTI DENGAN KREDENSIAL BOT TELEGRAM ANDA <<<
+// >>> KREDENSIAL TELEGRAM YANG SUDAH TERVERIFIKASI <<<
 // ==========================================================
 const QRIS_LINK = "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/12/6159183527572867881.jpg";
-// GANTI DENGAN TOKEN ASLI BOT ANDA DARI BOTFATHER
-const TELEGRAM_BOT_TOKEN = "8598799682:AAFSSTgkqJ3CBPLFknx2Rw9YS6ZUQf4RPvk"; 
-// ID Grup Utama PETARUKAN_STORE (ID yang ditemukan: 2330932094)
+// TOKEN BOT Anda (dari Gambar 675)
+const TELEGRAM_BOT_TOKEN = "85987998682:AAFSSTgkqJ3C8PLFknx2Rw9YS6ZUQf4RPvk"; 
+// ID Grup Utama PETARUKAN_STORE (Koreksi format -100 dari link t.me/c/)
 const TELEGRAM_CHAT_ID = "-1002330932094";  
-// ID Topik TRANSAKSI (Asumsi kuat: 4. Ubah jika Anda menemukan ID yang berbeda)
+// ID Topik TRANSAKSI (Angka /51 dari link t.me/c/)
 const TELEGRAM_THREAD_ID = "51";          
 // ==========================================================
 
@@ -359,8 +359,8 @@ document.addEventListener('DOMContentLoaded', checkAlertStatus);
 
 // --- FUNGSI TELEGRAM (MENDUKUNG TOPIK) ---
 function sendTelegramNotification(message) {
-    if (TELEGRAM_BOT_TOKEN.includes("[TOKEN_RAHASIA_DARI_BOTFATHER]")) {
-        console.error("Gagal mengirim Telegram: TOKEN BOT belum diatur.");
+    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+        console.error("Gagal mengirim Telegram: Kredensial BOT atau CHAT ID belum diatur.");
         return;
     }
     
@@ -405,14 +405,26 @@ function startCountdown(duration, display) {
         if (--timer < 0) {
             clearInterval(countdownInterval);
             display.textContent = "Waktu Habis!";
+            // Opsional: nonaktifkan tombol laporan jika waktu habis
+            // document.querySelector('#paymentModal .btn-order').disabled = true;
         }
     }, 1000);
 }
 
-// --- FUNGSI MODAL PEMBAYARAN & LAPORAN TELEGRAM ---
+// --- FUNGSI MODAL PEMBAYARAN & LAPORAN TELEGRAM YANG DIREVISI (Termasuk Input Nomor) ---
 function konfirmasiSelesai() {
     if (!selectedProduct) {
         alert("Terjadi kesalahan produk. Mohon ulangi proses order.");
+        return;
+    }
+
+    const customerNumberInput = document.getElementById('customerNumber');
+    const customerNumber = customerNumberInput ? customerNumberInput.value.trim() : '';
+
+    // Validasi: Pastikan Nomor Pelanggan Diisi
+    if (customerNumber.length < 9 || isNaN(customerNumber)) { // Minimal 9 digit dan harus angka
+        alert("Mohon masukkan Nomor XL/Axis pelanggan yang valid (minimal 9 digit angka).");
+        customerNumberInput.focus();
         return;
     }
 
@@ -422,18 +434,19 @@ function konfirmasiSelesai() {
     const timeStr = today.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
     const hargaFormatted = selectedProduct.harga.toLocaleString('id-ID');
 
-    // 1. SIAPKAN PESAN UNTUK BOT TELEGRAM ADMIN (Dikirim ke Topik TRANSAKSI)
+    // 1. SIAPKAN PESAN UNTUK BOT TELEGRAM ADMIN (MENAMBAH NOMOR PELANGGAN)
     const telegramMessage = `
 *🔔 KLAIM PEMBAYARAN BARU!*
 
 Pembeli mengklaim telah membayar pesanan:
 ➡️ *PRODUK:* ${selectedProduct.nama}
+➡️ *NOMOR PELANGGAN:* \`${customerNumber}\`
 ➡️ *HARGA:* Rp ${hargaFormatted}
 ➡️ *WAKTU KLAIM:* ${timeStr}
 
-*TINDAK LANJUT ADMIN:*
-1. Segera cek mutasi/laporan QRIS untuk transaksi sebesar *Rp ${hargaFormatted}* (Waktu Klaim: ${timeStr}).
-2. Jika terverifikasi, segera proses pengisian paket ke nomor pelanggan.
+*PROSES VALIDASI:*
+1. Segera cek mutasi/laporan QRIS untuk transaksi sebesar *Rp ${hargaFormatted}*.
+2. Jika Transaksi Masuk, segera proses pengisian paket ke *Nomor: ${customerNumber}*.
     `.trim();
 
     // KIRIM NOTIFIKASI KE BOT TELEGRAM
@@ -449,6 +462,7 @@ Pembeli mengklaim telah membayar pesanan:
         <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 15px 0; text-align: center;">
             <p style="font-weight: bold; font-size: 15px; color: #1B5E20;">DETAIL PESANAN ANDA</p>
             <p style="margin: 5px 0;">Produk: <strong>${selectedProduct.nama}</strong></p>
+            <p style="margin: 5px 0;">Nomor Tujuan: <strong>${customerNumber}</strong></p>
             <p style="font-size: 14px; color: #555;">Tanggal: ${dateStr}, Waktu: ${timeStr} WIB</p>
         </div>
 
@@ -477,7 +491,7 @@ function bukaPaymentModal(p) {
     selectedProduct = p; 
     const modal = document.getElementById("paymentModal");
     
-    // Reset konten modal pembayaran 
+    // Reset konten modal pembayaran dengan kolom input Nomor Pelanggan
     modal.querySelector('.modal-content').innerHTML = `
         <button class="close-btn" onclick="tutupPaymentModal()">×</button>
         <h3 id="paymentNama">${p.nama}</h3>
@@ -491,11 +505,25 @@ function bukaPaymentModal(p) {
             <div id="paymentTimer" style="font-size: 28px; font-weight: bold; color: #0035FF;">
                 15:00
             </div>
+            
             <img id="qrisImage" src="${QRIS_LINK}" alt="Kode QRIS Pembayaran">
         </div>
+
+        <div style="margin: 10px 0;">
+            <label for="customerNumber" style="font-size: 14px; font-weight: bold; display: block; margin-bottom: 5px;">
+                Masukkan Nomor XL/Axis Pelanggan:
+            </label>
+            <input 
+                type="number" 
+                id="customerNumber" 
+                placeholder="Contoh: 0878xxxxxx (XL/Axis)" 
+                style="width: 100%; padding: 10px; border: 2px solid #0035FF; border-radius: 8px; box-sizing: border-box; font-size: 16px;" 
+                required 
+            >
+        </div>
         
-        <p style="font-size: 12px; text-align: center; color: #555;">
-            *Setelah transfer, mohon klik tombol di bawah ini.
+        <p style="font-size: 12px; text-align: center; color: #555; margin-top: 15px;">
+            *Setelah transfer dan mengisi nomor, mohon klik tombol di bawah ini.
         </p>
         
         <div style="padding: 8px; gap: 5px; text-align: center;">
@@ -510,6 +538,7 @@ function bukaPaymentModal(p) {
 
     // Mulai hitungan mundur (15 menit = 900 detik)
     startCountdown(900, document.getElementById("paymentTimer"));
+    document.getElementById('customerNumber').focus();
 }
 
 function tutupPaymentModal() {
@@ -522,13 +551,13 @@ function tutupPaymentModal() {
     }, 200);
 }
 
-// --- DATA PRODUK ---
+// --- DATA PRODUK (DETAIL LENGKAP) ---
 const produkList = [
     {
         nama: "SUPER MINI",
         kategori: "PAKET AKRAB",
         harga: 46500,
-        stok: 0, 
+        stok: 1, 
         gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-supermini.png", 
         detail: `
             <p>Paket SUPER MINI Untuk XL & Axis</p>
@@ -582,15 +611,267 @@ const produkList = [
             </ul>
         `
     },
-    { nama: "MINI", kategori: "PAKET AKRAB", harga: 63000, stok: 0, gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-mini.png", detail: `Detail produk MINI...` },
-    { nama: "BIG", kategori: "PAKET AKRAB", harga: 65000, stok: 1, gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-big.png", detail: `Detail produk BIG...` },
-    { nama: "LITE", kategori: "PAKET AKRAB", harga: 71000, stok: 0, gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-lite.png", detail: `Detail produk LITE...` },
-    { nama: "JUMBO LITE", kategori: "PAKET AKRAB", harga: 74000, stok: 1, gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-jumbolite.png", detail: `Detail produk JUMBO LITE...` },
-    { nama: "MAX", kategori: "PAKET AKRAB", harga: 82000, stok: 0, gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-max.png", detail: `Detail produk MAX...` },
-    { nama: "LARGE", kategori: "PAKET AKRAB", harga: 88000, stok: 1, gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-large.png", detail: `Detail produk LARGE...` },
-    { nama: "JUMBO", kategori: "PAKET AKRAB", harga: 90000, stok: 0, gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-jumbo.png", detail: `Detail produk JUMBO...` },
-    { nama: "MEGA BIG", kategori: "PAKET AKRAB", harga: 97500, stok: 1, gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-megabig.png", detail: `Detail produk MEGA BIG...` },
-    { nama: "XTRA BIG", kategori: "PAKET AKRAB", harga: 127000, stok: 1, gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-xtrabig.png", detail: `Detail produk XTRA BIG...` },
+    { 
+        nama: "MINI", 
+        kategori: "PAKET AKRAB", 
+        harga: 63000, 
+        stok: 1, 
+        gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-mini.png", 
+        detail: `
+            <p>Paket MINI Untuk XL & Axis</p>
+            <p><strong>Detail Paket:</strong></p>
+            <ul>
+                <li>Area 1 = 25 - 27 GB</li>
+                <li>Area 2 = 27 - 29 GB</li>
+                <li>Area 3 = 32 - 34 GB</li>
+                <li>Area 4 = 42 - 44 GB</li>
+            </ul>
+            <p>Silahkan cek area kalian di sini:<br><a href="https://cekarea-jade.vercel.app/" target="_blank">https://cekarea-jade.vercel.app/</a></p>
+            <p><strong>Keterangan:</strong></p>
+            <ul>
+                <li>✓ Paket ini Official Resmi Bergaransi</li>
+                <li>✓ Full Reguler</li>
+                <li>✓ Masa Aktif 28 Hari</li>
+                <li>✓ Kuota Masuk ± 5 Menit Dari Pengelola</li>
+                <li>✓ Bonus Kuota My Rewards</li>
+                <li>✓ Reward tidak masuk, tunggu 1x24 jam sebelum komplain.</li>
+                <li>✓ Pastikan nomor sesuai — kesalahan nomor bukan tanggung jawab kami.</li>
+                <li>✓ Jika masih ada paket akrab aktif dari pengelola lain, wajib UNREG dahulu.</li>
+            </ul>
+        `
+    },
+    { 
+        nama: "BIG", 
+        kategori: "PAKET AKRAB", 
+        harga: 65000, 
+        stok: 1, 
+        gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-big.png", 
+        detail: `
+            <p>Paket BIG Untuk XL & Axis</p>
+            <p><strong>Detail Paket:</strong></p>
+            <ul>
+                <li>Area 1 = 30 - 32 GB</li>
+                <li>Area 2 = 32 - 34 GB</li>
+                <li>Area 3 = 37 - 39 GB</li>
+                <li>Area 4 = 47 - 49 GB</li>
+            </ul>
+            <p>Silahkan cek area kalian di sini:<br><a href="https://cekarea-jade.vercel.app/" target="_blank">https://cekarea-jade.vercel.app/</a></p>
+            <p><strong>Keterangan:</strong></p>
+            <ul>
+                <li>✓ Paket ini Official Resmi Bergaransi</li>
+                <li>✓ Full Reguler</li>
+                <li>✓ Masa Aktif 28 Hari</li>
+                <li>✓ Kuota Masuk ± 5 Menit Dari Pengelola</li>
+                <li>✓ Bonus Kuota My Rewards</li>
+                <li>✓ Reward tidak masuk, tunggu 1x24 jam sebelum komplain.</li>
+                <li>✓ Pastikan nomor sesuai — kesalahan nomor bukan tanggung jawab kami.</li>
+                <li>✓ Jika masih ada paket akrab aktif dari pengelola lain, wajib UNREG dahulu.</li>
+            </ul>
+        `
+    },
+    { 
+        nama: "LITE", 
+        kategori: "PAKET AKRAB", 
+        harga: 71000, 
+        stok: 1, 
+        gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-lite.png", 
+        detail: `
+            <p>Paket LITE Untuk XL & Axis</p>
+            <p><strong>Detail Paket:</strong></p>
+            <ul>
+                <li>Area 1 = 38 - 40 GB</li>
+                <li>Area 2 = 40 - 42 GB</li>
+                <li>Area 3 = 45 - 47 GB</li>
+                <li>Area 4 = 55 - 57 GB</li>
+            </ul>
+            <p>Silahkan cek area kalian di sini:<br><a href="https://cekarea-jade.vercel.app/" target="_blank">https://cekarea-jade.vercel.app/</a></p>
+            <p><strong>Keterangan:</strong></p>
+            <ul>
+                <li>✓ Paket ini Official Resmi Bergaransi</li>
+                <li>✓ Full Reguler</li>
+                <li>✓ Masa Aktif 28 Hari</li>
+                <li>✓ Kuota Masuk ± 5 Menit Dari Pengelola</li>
+                <li>✓ Bonus Kuota My Rewards</li>
+                <li>✓ Reward tidak masuk, tunggu 1x24 jam sebelum komplain.</li>
+                <li>✓ Pastikan nomor sesuai — kesalahan nomor bukan tanggung jawab kami.</li>
+                <li>✓ Jika masih ada paket akrab aktif dari pengelola lain, wajib UNREG dahulu.</li>
+            </ul>
+        `
+    },
+    { 
+        nama: "JUMBO LITE", 
+        kategori: "PAKET AKRAB", 
+        harga: 74000, 
+        stok: 1, 
+        gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-jumbolite.png", 
+        detail: `
+            <p>Paket JUMBO LITE Untuk XL & Axis</p>
+            <p><strong>Detail Paket:</strong></p>
+            <ul>
+                <li>Area 1 = 45 - 47 GB</li>
+                <li>Area 2 = 47 - 49 GB</li>
+                <li>Area 3 = 52 - 54 GB</li>
+                <li>Area 4 = 62 - 64 GB</li>
+            </ul>
+            <p>Silahkan cek area kalian di sini:<br><a href="https://cekarea-jade.vercel.app/" target="_blank">https://cekarea-jade.vercel.app/</a></p>
+            <p><strong>Keterangan:</strong></p>
+            <ul>
+                <li>✓ Paket ini Official Resmi Bergaransi</li>
+                <li>✓ Full Reguler</li>
+                <li>✓ Masa Aktif 28 Hari</li>
+                <li>✓ Kuota Masuk ± 5 Menit Dari Pengelola</li>
+                <li>✓ Bonus Kuota My Rewards</li>
+                <li>✓ Reward tidak masuk, tunggu 1x24 jam sebelum komplain.</li>
+                <li>✓ Pastikan nomor sesuai — kesalahan nomor bukan tanggung jawab kami.</li>
+                <li>✓ Jika masih ada paket akrab aktif dari pengelola lain, wajib UNREG dahulu.</li>
+            </ul>
+        `
+    },
+    { 
+        nama: "MAX", 
+        kategori: "PAKET AKRAB", 
+        harga: 82000, 
+        stok: 1, 
+        gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-max.png", 
+        detail: `
+            <p>Paket MAX Untuk XL & Axis</p>
+            <p><strong>Detail Paket:</strong></p>
+            <ul>
+                <li>Area 1 = 50 - 52 GB</li>
+                <li>Area 2 = 52 - 54 GB</li>
+                <li>Area 3 = 57 - 59 GB</li>
+                <li>Area 4 = 67 - 69 GB</li>
+            </ul>
+            <p>Silahkan cek area kalian di sini:<br><a href="https://cekarea-jade.vercel.app/" target="_blank">https://cekarea-jade.vercel.app/</a></p>
+            <p><strong>Keterangan:</strong></p>
+            <ul>
+                <li>✓ Paket ini Official Resmi Bergaransi</li>
+                <li>✓ Full Reguler</li>
+                <li>✓ Masa Aktif 28 Hari</li>
+                <li>✓ Kuota Masuk ± 5 Menit Dari Pengelola</li>
+                <li>✓ Bonus Kuota My Rewards</li>
+                <li>✓ Reward tidak masuk, tunggu 1x24 jam sebelum komplain.</li>
+                <li>✓ Pastikan nomor sesuai — kesalahan nomor bukan tanggung jawab kami.</li>
+                <li>✓ Jika masih ada paket akrab aktif dari pengelola lain, wajib UNREG dahulu.</li>
+            </ul>
+        `
+    },
+    { 
+        nama: "LARGE", 
+        kategori: "PAKET AKRAB", 
+        harga: 88000, 
+        stok: 1, 
+        gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-large.png", 
+        detail: `
+            <p>Paket LARGE Untuk XL & Axis</p>
+            <p><strong>Detail Paket:</strong></p>
+            <ul>
+                <li>Area 1 = 57 - 59 GB</li>
+                <li>Area 2 = 59 - 61 GB</li>
+                <li>Area 3 = 64 - 66 GB</li>
+                <li>Area 4 = 74 - 76 GB</li>
+            </ul>
+            <p>Silahkan cek area kalian di sini:<br><a href="https://cekarea-jade.vercel.app/" target="_blank">https://cekarea-jade.vercel.app/</a></p>
+            <p><strong>Keterangan:</strong></p>
+            <ul>
+                <li>✓ Paket ini Official Resmi Bergaransi</li>
+                <li>✓ Full Reguler</li>
+                <li>✓ Masa Aktif 28 Hari</li>
+                <li>✓ Kuota Masuk ± 5 Menit Dari Pengelola</li>
+                <li>✓ Bonus Kuota My Rewards</li>
+                <li>✓ Reward tidak masuk, tunggu 1x24 jam sebelum komplain.</li>
+                <li>✓ Pastikan nomor sesuai — kesalahan nomor bukan tanggung jawab kami.</li>
+                <li>✓ Jika masih ada paket akrab aktif dari pengelola lain, wajib UNREG dahulu.</li>
+            </ul>
+        `
+    },
+    { 
+        nama: "JUMBO", 
+        kategori: "PAKET AKRAB", 
+        harga: 90000, 
+        stok: 1, 
+        gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-jumbo.png", 
+        detail: `
+            <p>Paket JUMBO Untuk XL & Axis</p>
+            <p><strong>Detail Paket:</strong></p>
+            <ul>
+                <li>Area 1 = 64 - 66 GB</li>
+                <li>Area 2 = 66 - 68 GB</li>
+                <li>Area 3 = 71 - 73 GB</li>
+                <li>Area 4 = 81 - 83 GB</li>
+            </ul>
+            <p>Silahkan cek area kalian di sini:<br><a href="https://cekarea-jade.vercel.app/" target="_blank">https://cekarea-jade.vercel.app/</a></p>
+            <p><strong>Keterangan:</strong></p>
+            <ul>
+                <li>✓ Paket ini Official Resmi Bergaransi</li>
+                <li>✓ Full Reguler</li>
+                <li>✓ Masa Aktif 28 Hari</li>
+                <li>✓ Kuota Masuk ± 5 Menit Dari Pengelola</li>
+                <li>✓ Bonus Kuota My Rewards</li>
+                <li>✓ Reward tidak masuk, tunggu 1x24 jam sebelum komplain.</li>
+                <li>✓ Pastikan nomor sesuai — kesalahan nomor bukan tanggung jawab kami.</li>
+                <li>✓ Jika masih ada paket akrab aktif dari pengelola lain, wajib UNREG dahulu.</li>
+            </ul>
+        `
+    },
+    { 
+        nama: "MEGA BIG", 
+        kategori: "PAKET AKRAB", 
+        harga: 97500, 
+        stok: 1, 
+        gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-megabig.png", 
+        detail: `
+            <p>Paket MEGA BIG Untuk XL & Axis</p>
+            <p><strong>Detail Paket:</strong></p>
+            <ul>
+                <li>Area 1 = 78 - 80 GB</li>
+                <li>Area 2 = 80 - 82 GB</li>
+                <li>Area 3 = 85 - 87 GB</li>
+                <li>Area 4 = 95 - 97 GB</li>
+            </ul>
+            <p>Silahkan cek area kalian di sini:<br><a href="https://cekarea-jade.vercel.app/" target="_blank">https://cekarea-jade.vercel.app/</a></p>
+            <p><strong>Keterangan:</strong></p>
+            <ul>
+                <li>✓ Paket ini Official Resmi Bergaransi</li>
+                <li>✓ Full Reguler</li>
+                <li>✓ Masa Aktif 28 Hari</li>
+                <li>✓ Kuota Masuk ± 5 Menit Dari Pengelola</li>
+                <li>✓ Bonus Kuota My Rewards</li>
+                <li>✓ Reward tidak masuk, tunggu 1x24 jam sebelum komplain.</li>
+                <li>✓ Pastikan nomor sesuai — kesalahan nomor bukan tanggung jawab kami.</li>
+                <li>✓ Jika masih ada paket akrab aktif dari pengelola lain, wajib UNREG dahulu.</li>
+            </ul>
+        `
+    },
+    { 
+        nama: "XTRA BIG", 
+        kategori: "PAKET AKRAB", 
+        harga: 127000, 
+        stok: 1, 
+        gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-xtrabig.png", 
+        detail: `
+            <p>Paket XTRA BIG Untuk XL & Axis</p>
+            <p><strong>Detail Paket:</strong></p>
+            <ul>
+                <li>Area 1 = 90 - 92 GB</li>
+                <li>Area 2 = 92 - 94 GB</li>
+                <li>Area 3 = 97 - 99 GB</li>
+                <li>Area 4 = 107 - 109 GB</li>
+            </ul>
+            <p>Silahkan cek area kalian di sini:<br><a href="https://cekarea-jade.vercel.app/" target="_blank">https://cekarea-jade.vercel.app/</a></p>
+            <p><strong>Keterangan:</strong></p>
+            <ul>
+                <li>✓ Paket ini Official Resmi Bergaransi</li>
+                <li>✓ Full Reguler</li>
+                <li>✓ Masa Aktif 28 Hari</li>
+                <li>✓ Kuota Masuk ± 5 Menit Dari Pengelola</li>
+                <li>✓ Bonus Kuota My Rewards</li>
+                <li>✓ Reward tidak masuk, tunggu 1x24 jam sebelum komplain.</li>
+                <li>✓ Pastikan nomor sesuai — kesalahan nomor bukan tanggung jawab kami.</li>
+                <li>✓ Jika masih ada paket akrab aktif dari pengelola lain, wajib UNREG dahulu.</li>
+            </ul>
+        `
+    },
 ];
 
 
