@@ -415,7 +415,7 @@ function konfirmasiSelesai() {
 
     // Validasi: Pastikan Nomor Pelanggan Diisi
     if (customerNumber.length < 9 || isNaN(customerNumber) || customerNumber === '') { 
-        alert("Mohon masukkan Nomor XL/Axis pelanggan yang valid (minimal 9 digit angka).");
+        alert("Mohon masukkan Nomor XL/Axis pelanggan yang valid (minimal 12 digit angka).");
         if (customerNumberInput) customerNumberInput.focus();
         return;
     }
@@ -462,10 +462,10 @@ Pembeli mengklaim telah membayar pesanan:
             Paket Otomatis Masuk ± 10 Menit BY Sistem
         </p>
         <p style="font-size: 14px; text-align: center; color: #555;">
-            Terima kasih telah order di Petarukan Store 🙏
+            𝐓𝐄𝐑𝐈𝐌𝐀 𝐊𝐀𝐒𝐈𝐇 𝐓𝐄𝐋𝐀𝐇 𝐎𝐑𝐃𝐄𝐑 𝐃𝐈 𝐏𝐄𝐓𝐀𝐑𝐔𝐊𝐀𝐍 𝐒𝐓𝐎𝐑𝐄 🙏
         </p>
         <p style="font-size: 12px; text-align: center; color: #888;">
-            *Catatan: Admin telah menerima notifikasi dan akan segera memproses verifikasi dan pengisian.
+            *Catatan: Jika Paket Belum masuk Selama Waktu yg telah di tentukan-maka wajib Komplen ke CS ya kak.
         </p>
 
         <button class="btn btn-detail" onclick="tutupPaymentModal()" style="width: 100%; margin-top: 20px;">
@@ -503,7 +503,7 @@ function bukaPaymentModal(p) {
 
         <div style="margin: 10px 0;">
             <label for="customerNumber" style="font-size: 14px; font-weight: bold; display: block; margin-bottom: 5px;">
-                Masukkan Nomor XL/Axis Pelanggan:
+                Masukkan Nomor XL/Axis :
             </label>
             <input 
                 type="number" 
@@ -519,7 +519,7 @@ function bukaPaymentModal(p) {
         </p>
         
         <div style="padding: 8px; gap: 5px; text-align: center;">
-            <button class="btn btn-order" onclick="konfirmasiSelesai()">SAYA SUDAH BAYAR & LAPOR</button>
+            <button class="btn btn-order" onclick="konfirmasiSelesai()">KONFIRMASI</button>
         </div>
     `;
 
