@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Petarukan Store || XL MULTI ADD ON</title>
+<style>
+/* --- PERBAIKAN ANTI-PERGESERAN LAYAR (FINAL) --- */
+html {
+    overflow-y: scroll; 
+}
+body {
+    font-family: Arial, sans-serif;
+    background: #F4F4F4;
+    margin: 0;
+    padding: 0;
+}
+body.modal-open { overflow: hidden; } 
+
+/* --- PERBAIKAN HEADER TETAP (FIXED) --- */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    background: white;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+    box-sizing: border-box;
+}
+
+/* Penahan (Spacer) agar Konten Produk tidak tertutup Header Fixed */
+.content-spacer {
+    margin-top: 170px; 
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px; 
+}
+.logo { width: 48px; height: 48px; border-radius: 5px; overflow: hidden; }
+.logo img { width: 100%; height: 100%; object-fit: cover; }
+.store-info { display: flex; flex-direction: column; }
+.store-name { font-size: 20px; font-weight: bold; }
+.store-sub { font-size: 12px; color: #555; }
+.search-box {
+    width: 90%;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin-bottom: 5px; 
+}
+
+/* --- TEKS BERJALAN/PENGUMUMAN --- */
+.welcome-text {
+    background: linear-gradient(90deg, #0044FF, #001A9A);
+    box-shadow: 0 4px 8px rgba(0, 53, 255, 0.4);
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 14px; 
+    color: #fff;
+    height: 30px; 
+    display: flex; 
+    align-items: center; 
+    margin: 4px auto 8px auto; 
+    border: none;
+    width: 100%;
+    overflow: hidden; 
+    padding: 0 5px 0 10px; 
+    box-sizing: border-box;
+    animation: pulseShadow 2s infinite alternate;
+}
+@keyframes pulseShadow {
+    0% { box-shadow: 0 4px 8px rgba(0, 53, 255, 0.4); }
+    100% { box-shadow: 0 4px 12px rgba(255, 255, 255, 0.7); }
+}
+.announcement-icon {
+    font-size: 18px; 
+    margin-right: 8px; 
+    flex-shrink: 0; 
+    text-shadow: 0 0 5px #FFFF00, 0 0 10px #FFD700; 
+}
+.marquee-container {
+    flex-grow: 1;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.marquee-content {
+    display: inline-block;
+    padding-left: 100%;
+    animation: scrolling 12s linear infinite; 
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5); 
+}
+@keyframes scrolling {
+    0% { transform: translateX(0%); } 
+    100% { transform: translateX(-100%); }
+}
+
+/* --- TANGGAL DAN JAM --- */
+.datetime-container {
+    background: none; 
+    text-align: center;
+    padding: 0 0 3px 0; 
+    font-size: 11px;
+    color: #555;
+    font-weight: normal;
+}
+
+/* --- ADMIN INFO ALERT BARU --- */
+.admin-alert {
+    margin: 10px 12px;
+    padding: 10px 15px;
+    background-color: #fce4ec;
+    color: #c2185b;
+    border: 1px solid #f8bbd0;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+.alert-close {
+    background: none;
+    border: none;
+    color: #c2185b;
+    font-size: 16px;
+    cursor: pointer;
+    margin-left: 10px;
+    font-weight: bold;
+}
+
+/* GRID PRODUK */
+.produk-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 12px;
+}
+.card {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    position: relative;
+}
+.card img { width: 100%; height: 140px; object-fit: cover; }
+.stok-label {
+    position: absolute;
+    top: 8px; left: 8px;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
+    color: white;
+}
+.stok-habis { background: #e53935; }
+.stok-ready { background: #43a047; }
+.card-content { padding: 8px; }
+.card-content h3 { font-size: 15px; margin: 0 0 4px 0; } 
+.card-content p  { font-size: 11px; color: #666; margin: 4px 0; }
+.card-buttons {
+    display: flex; justify-content: space-between; padding: 8px; gap: 5px;
+}
+.btn {
+    flex: 1;
+    padding: 6px 0;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+.btn-detail { background: #1508DA; color: #F7F7F7; }
+.btn-order  { background: #d32f2f; color: white; }
+
+/* Tombol nonaktif (abu-abu kalau stok 0) */
+.btn-order[disabled] {
+    background: #bdbdbd !important;
+    color: #f0f0f0 !important;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+/* MODAL DETAIL & PAYMENT (Gaya CSS sama) */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity .25s ease;
+}
+.modal.show { opacity: 1; }
+.modal-content {
+    background: white;
+    border-radius: 15px;
+    padding: 15px;
+    max-width: 340px;
+    width: 100%;
+    position: relative;
+    text-align: left;
+    overflow-y: auto;
+    max-height: 80vh;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    transform: scale(0.9);
+    transition: transform .25s ease;
+}
+.modal.show .modal-content { transform: scale(1); }
+.modal-content img {
+    display: block;
+    width: 110px; height: 110px; object-fit: cover;
+    border-radius: 8px; margin: 0 auto 8px;
+}
+/* Style untuk gambar QRIS agar lebih besar */
+.modal-content #qrisImage {
+    width: 180px; 
+    height: auto; 
+    margin: 15px auto; 
+    border: 1px solid #ddd; 
+    padding: 5px;
+}
+.modal-content h3 { text-align: center; font-size: 16px; margin: 5px 0 10px; }
+.modal-content p, .modal-content ul { font-size: 12.5px; line-height: 1.4; margin: 4px 0; }
+.modal-content ul { padding-left: 18px; }
+.close-btn {
+    position: absolute; top: 6px; right: 6px; background: #ccc; border: none;
+    border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-size: 14px;
+}
+.harga { font-weight: bold; text-align: center; font-size: 14px; color: #111; margin-top: 10px; }
+/* TITLE KATEGORI */
+.kategori-title {
+    width: 70%;
+    grid-column: span 2;
+    text-align: center;
+    background: #0035FF;
+    color: #FFFFFF;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin: 10px auto;
+    font-size: 13px;
+}
+
+/* Responsif */
+@media (max-width: 450px) {
+    .modal-content { max-width: 92%; padding: 12px; max-height: 75vh; }
+    .modal-content h3 { font-size: 15px; }
+    .modal-content p, .modal-content ul { font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="brand">
+        <div class="logo"><img src="https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/giphy.gif" alt="Logo"></div> 
+        <div class="store-info">
+            <div class="store-name">PETARUKAN STORE</div>
+            <div class="store-sub">Jl. Raya Petarukan Pemalang</div>
+        </div>
+    </div>
+    
+    <input type="text" id="searchBox" class="search-box" placeholder="Cari produk (nama atau kategori)...">
+    
+    <div class="welcome-text">
+        <span class="announcement-icon">📢</span> 
+        <div class="marquee-container">
+            <p class="marquee-content">🚀 Transaksi Lancar Juragan! Stok Setiap Hari Ready - Paket Akrab ini Stoknya Mudah Habis - jangan sampai Kehabisan! Kalau Mau Kebagian Stok Keep langsung Hubungi Admin Satset 💪</p>
+        </div>
+    </div>
+    
+    <div class="datetime-container" id="currentDateTime"></div>
+    
+</div>
+
+<div class="content-spacer">
+    
+    <div class="admin-alert" id="adminNotification" style="display: none;">
+        <span>🔔 PEMBERITAHUAN ADMIN: Layanan Produk Akrab Ready Setiap Hari - Paket Akrab ini Stoknya Mudah habis Kalau mau Kebagian Stok Bisa Keep Hubungi Admin ya. Terima kasih!</span>
+        <button class="alert-close" onclick="dismissAlert()">×</button>
+    </div>
+    <div class="produk-grid" id="produkGrid"></div>
+</div>
+
+<div class="modal" id="detailModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="tutupModal()">×</button>
+        <img id="modalImg" src="" alt="">
+        <h3 id="modalNama"></h3>
+        <div id="modalIsi"></div>
+        <p class="harga" id="modalHarga"></p>
+    </div>
+</div>
+
+<div class="modal" id="paymentModal">
+    <div class="modal-content">
+        </div>
+</div>
+
+<script>
+// ==========================================================
+// >>> ⚠️ PENTING: GANTI DENGAN KREDENSIAL BOT TELEGRAM ANDA <<<
+// ==========================================================
+const QRIS_LINK = "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/12/6159183527572867881.jpg";
+// GANTI DENGAN TOKEN ASLI BOT ANDA DARI BOTFATHER
+const TELEGRAM_BOT_TOKEN = "8598799682:AAFSSTgkqJ3CBPLFknx2Rw9YS6ZUQf4RPvk"; 
+// ID Grup Utama PETARUKAN_STORE (ID yang ditemukan: -1271362249)
+const TELEGRAM_CHAT_ID = "-1271362249";  
+// ID Topik TRANSAKSI (Asumsi kuat: 4. Ubah jika Anda menemukan ID yang berbeda)
+const TELEGRAM_THREAD_ID = "4";          
+// ==========================================================
+
+let countdownInterval;
+let selectedProduct; 
+
+// --- FUNGSIONALITAS TANGGAL & JAM ---
+function updateDateTime() {
+    const now = new Date();
+    const options = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit',
+        hour12: false 
+    };
+    const dateTimeString = now.toLocaleDateString('id-ID', options);
+    document.getElementById('currentDateTime').textContent = dateTimeString + ' WIB';
+}
+updateDateTime();
+setInterval(updateDateTime, 1000); 
+
+// --- FUNGSIONALITAS PEMBERITAHUAN ADMIN ---
+function checkAlertStatus() {
+    const alert = document.getElementById('adminNotification');
+    if (localStorage.getItem('adminAlertDismissed') !== 'true') {
+        alert.style.display = 'flex';
+    }
+}
+function dismissAlert() {
+    const alert = document.getElementById('adminNotification');
+    alert.style.display = 'none';
+    localStorage.setItem('adminAlertDismissed', 'true');
+}
+document.addEventListener('DOMContentLoaded', checkAlertStatus);
+
+// --- FUNGSI TELEGRAM (MENDUKUNG TOPIK) ---
+function sendTelegramNotification(message) {
+    if (TELEGRAM_BOT_TOKEN.includes("[TOKEN_RAHASIA_DARI_BOTFATHER]")) {
+        console.error("Gagal mengirim Telegram: TOKEN BOT belum diatur.");
+        return;
+    }
+    
+    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    
+    const payload = {
+        chat_id: TELEGRAM_CHAT_ID,
+        text: message,
+        parse_mode: 'Markdown'
+    };
+    
+    // Memastikan pesan masuk ke Topik TRANSAKSI
+    if (TELEGRAM_THREAD_ID) {
+        payload.message_thread_id = TELEGRAM_THREAD_ID;
+    }
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    }).catch(error => {
+        console.error('Error saat koneksi ke Telegram:', error);
+    });
+}
+
+// --- FUNGSIONALITAS TIMER ---
+function startCountdown(duration, display) {
+    let timer = duration, minutes, seconds;
+    clearInterval(countdownInterval);
+
+    countdownInterval = setInterval(function () {
+        minutes = parseInt(timer / 60, 10);
+        seconds = parseInt(timer % 60, 10);
+
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+
+        display.textContent = minutes + ":" + seconds;
+
+        if (--timer < 0) {
+            clearInterval(countdownInterval);
+            display.textContent = "Waktu Habis!";
+        }
+    }, 1000);
+}
+
+// --- FUNGSI MODAL PEMBAYARAN & LAPORAN TELEGRAM ---
+function konfirmasiSelesai() {
+    if (!selectedProduct) {
+        alert("Terjadi kesalahan produk. Mohon ulangi proses order.");
+        return;
+    }
+
+    const modalContent = document.querySelector('#paymentModal .modal-content');
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const timeStr = today.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    const hargaFormatted = selectedProduct.harga.toLocaleString('id-ID');
+
+    // 1. SIAPKAN PESAN UNTUK BOT TELEGRAM ADMIN (Dikirim ke Topik TRANSAKSI)
+    const telegramMessage = `
+*🔔 KLAIM PEMBAYARAN BARU!*
+
+Pembeli mengklaim telah membayar pesanan:
+➡️ *PRODUK:* ${selectedProduct.nama}
+➡️ *HARGA:* Rp ${hargaFormatted}
+➡️ *WAKTU KLAIM:* ${timeStr}
+
+*TINDAK LANJUT ADMIN:*
+1. Segera cek mutasi/laporan QRIS untuk transaksi sebesar *Rp ${hargaFormatted}* (Waktu Klaim: ${timeStr}).
+2. Jika terverifikasi, segera proses pengisian paket ke nomor pelanggan.
+    `.trim();
+
+    // KIRIM NOTIFIKASI KE BOT TELEGRAM
+    sendTelegramNotification(telegramMessage);
+
+    // 2. HENTIKAN TIMER DAN TAMPILKAN PESAN SUKSES OTOMATIS KE PEMBELI
+    clearInterval(countdownInterval);
+    document.getElementById("paymentModal").classList.remove("show");
+
+    modalContent.innerHTML = `
+        <h3 style="color: #4CAF50; margin-top: 15px;">✅ Pembayaran Berhasil sebesar Rp ${hargaFormatted}</h3>
+        
+        <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 15px 0; text-align: center;">
+            <p style="font-weight: bold; font-size: 15px; color: #1B5E20;">DETAIL PESANAN ANDA</p>
+            <p style="margin: 5px 0;">Produk: <strong>${selectedProduct.nama}</strong></p>
+            <p style="font-size: 14px; color: #555;">Tanggal: ${dateStr}, Waktu: ${timeStr} WIB</p>
+        </div>
+
+        <p style="font-weight: bold; text-align: center; color: #0035FF; margin-top: 15px;">
+            Paket Otomatis Masuk ± 10 Menit BY Sistem
+        </p>
+        <p style="font-size: 14px; text-align: center; color: #555;">
+            Terima kasih telah order di Petarukan Store 🙏
+        </p>
+        <p style="font-size: 12px; text-align: center; color: #888;">
+            *Catatan: Admin telah menerima notifikasi dan akan segera memproses verifikasi dan pengisian.
+        </p>
+
+        <button class="btn btn-detail" onclick="tutupPaymentModal()" style="width: 100%; margin-top: 20px;">
+            TUTUP
+        </button>
+    `;
+
+    const modal = document.getElementById("paymentModal");
+    modal.style.display = "flex";
+    setTimeout(() => modal.classList.add("show"), 10);
+}
+
+
+function bukaPaymentModal(p) {
+    selectedProduct = p; 
+    const modal = document.getElementById("paymentModal");
+    
+    // Reset konten modal pembayaran 
+    modal.querySelector('.modal-content').innerHTML = `
+        <button class="close-btn" onclick="tutupPaymentModal()">×</button>
+        <h3 id="paymentNama">${p.nama}</h3>
+        <p style="text-align: center; font-size: 14px;">Total Pembayaran:</p>
+        <p class="harga" id="paymentHarga">Rp ${p.harga.toLocaleString('id-ID')}</p>
+        
+        <div style="text-align: center; margin: 15px 0;">
+            <p style="font-weight: bold; color: #d32f2f; font-size: 16px;">
+                Selesaikan Pembayaran dalam: 
+            </p>
+            <div id="paymentTimer" style="font-size: 28px; font-weight: bold; color: #0035FF;">
+                15:00
+            </div>
+            <img id="qrisImage" src="${QRIS_LINK}" alt="Kode QRIS Pembayaran">
+        </div>
+        
+        <p style="font-size: 12px; text-align: center; color: #555;">
+            *Setelah transfer, mohon klik tombol di bawah ini.
+        </p>
+        
+        <div style="padding: 8px; gap: 5px; text-align: center;">
+            <button class="btn btn-order" onclick="konfirmasiSelesai()">SAYA SUDAH BAYAR & LAPOR</button>
+        </div>
+    `;
+
+    // Tampilkan modal
+    modal.style.display = "flex";
+    document.body.classList.add("modal-open");
+    setTimeout(() => modal.classList.add("show"), 10);
+
+    // Mulai hitungan mundur (15 menit = 900 detik)
+    startCountdown(900, document.getElementById("paymentTimer"));
+}
+
+function tutupPaymentModal() {
+    clearInterval(countdownInterval); 
+    const modal = document.getElementById("paymentModal");
+    modal.classList.remove("show");
+    setTimeout(() => {
+        modal.style.display = "none";
+        document.body.classList.remove("modal-open");
+    }, 200);
+}
+
+// --- DATA PRODUK ---
+const produkList = [
+    {
+        nama: "SUPER MINI",
+        kategori: "PAKET AKRAB",
+        harga: 46500,
+        stok: 0, 
+        gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-supermini.png", 
+        detail: `
+            <p>Paket SUPER MINI Untuk XL & Axis</p>
+            <p><strong>Detail Paket:</strong></p>
+            <ul>
+                <li>Area 1 = 13 - 15 GB</li>
+                <li>Area 2 = 15 - 17 GB</li>
+                <li>Area 3 = 20 - 22 GB</li>
+                <li>Area 4 = 30 - 32 GB</li>
+            </ul>
+            <p>Silahkan cek area kalian di sini:<br><a href="https://cekarea-jade.vercel.app/" target="_blank">https://cekarea-jade.vercel.app/</a></p>
+            <p><strong>Keterangan:</strong></p>
+            <ul>
+                <li>✓ Paket ini Official Resmi Bergaransi</li>
+                <li>✓ Full Reguler</li>
+                <li>✓ Masa Aktif 28 Hari</li>
+                <li>✓ Kuota Masuk ± 5 Menit Dari Pengelola</li>
+                <li>✓ Bonus Kuota My Rewards</li>
+                <li>✓ Reward tidak masuk, tunggu 1x24 jam sebelum komplain.</li>
+                <li>✓ Pastikan nomor sesuai — kesalahan nomor bukan tanggung jawab kami.</li>
+                <li>✓ Jika masih ada paket akrab aktif dari pengelola lain, wajib UNREG dahulu.</li>
+            </ul>
+        `
+    },
+    {
+        nama: "SUPER LITE",
+        kategori: "PAKET AKRAB",
+        harga: 52000,
+        stok: 1, 
+        gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-superlite.png",
+        detail: `
+            <p>Paket SUPER LITE Untuk XL & Axis</p>
+            <p><strong>Detail Paket:</strong></p>
+            <ul>
+                <li>Area 1 = 19 - 21 GB</li>
+                <li>Area 2 = 21 - 23 GB</li>
+                <li>Area 3 = 26 - 28 GB</li>
+                <li>Area 4 = 36 - 38 GB</li>
+            </ul>
+            <p>Silahkan cek area kalian di sini:<br><a href="https://cekarea-jade.vercel.app/" target="_blank">https://cekarea-jade.vercel.app/</a></p>
+            <p><strong>Keterangan:</strong></p>
+            <ul>
+                <li>✓ Paket ini Official Resmi Bergaransi</li>
+                <li>✓ Full Reguler</li>
+                <li>✓ Masa Aktif 28 Hari</li>
+                <li>✓ Kuota Masuk ± 5 Menit Dari Pengelola</li>
+                <li>✓ Bonus Kuota My Rewards</li>
+                <li>✓ Reward tidak masuk, tunggu 1x24 jam sebelum komplain.</li>
+                <li>✓ Pastikan nomor sesuai — kesalahan nomor bukan tanggung jawab kami.</li>
+                <li>✓ Jika masih ada paket akrab aktif dari pengelola lain, wajib UNREG dahulu.</li>
+            </ul>
+        `
+    },
+    { nama: "MINI", kategori: "PAKET AKRAB", harga: 63000, stok: 0, gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-mini.png", detail: `Detail produk MINI...` },
+    { nama: "BIG", kategori: "PAKET AKRAB", harga: 65000, stok: 1, gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-big.png", detail: `Detail produk BIG...` },
+    { nama: "LITE", kategori: "PAKET AKRAB", harga: 71000, stok: 0, gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-lite.png", detail: `Detail produk LITE...` },
+    { nama: "JUMBO LITE", kategori: "PAKET AKRAB", harga: 74000, stok: 1, gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-jumbolite.png", detail: `Detail produk JUMBO LITE...` },
+    { nama: "MAX", kategori: "PAKET AKRAB", harga: 82000, stok: 0, gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-max.png", detail: `Detail produk MAX...` },
+    { nama: "LARGE", kategori: "PAKET AKRAB", harga: 88000, stok: 1, gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-large.png", detail: `Detail produk LARGE...` },
+    { nama: "JUMBO", kategori: "PAKET AKRAB", harga: 90000, stok: 0, gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-jumbo.png", detail: `Detail produk JUMBO...` },
+    { nama: "MEGA BIG", kategori: "PAKET AKRAB", harga: 97500, stok: 1, gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-megabig.png", detail: `Detail produk MEGA BIG...` },
+    { nama: "XTRA BIG", kategori: "PAKET AKRAB", harga: 127000, stok: 1, gambar: "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/11/produk-xtrabig.png", detail: `Detail produk XTRA BIG...` },
+];
+
+
+const produkGrid = document.getElementById("produkGrid");
+
+// --- FUNGSI MERENDER PRODUK ---
+function renderProduk(list) {
+    produkGrid.innerHTML = "";
+    if (list.length === 0) {
+        produkGrid.innerHTML = '<p style="grid-column: span 2; text-align: center; color: #555; margin-top: 20px;">Produk tidak ditemukan.</p>';
+        return;
+    }
+    
+    const kategoriList = [...new Set(list.map(p => p.kategori))];
+
+    kategoriList.forEach(kat => {
+        const produkInKategori = list.filter(p => p.kategori === kat);
+        if (produkInKategori.length > 0) {
+            const title = document.createElement("div");
+            title.className = "kategori-title";
+            title.textContent = `PRODUK ${kat}`;
+            produkGrid.appendChild(title);
+
+            produkInKategori.forEach(p => {
+                const card = document.createElement("div");
+                card.classList.add("card");
+                card.innerHTML = `
+                    <span class="stok-label ${p.stok > 0 ? 'stok-ready' : 'stok-habis'}">
+                        ${p.stok > 0 ? 'STATUS: READY' : 'STATUS: HABIS'}
+                    </span>
+                    <img src="${p.gambar}" alt="${p.nama}">
+                    <div class="card-content">
+                        <h3>${p.nama}</h3>
+                        <p>Paket data ${p.nama} untuk XL & Axis</p>
+                    </div>
+                    <div class="card-buttons">
+                        <button class="btn btn-detail">DETAIL</button>
+                        <button class="btn btn-order" ${p.stok === 0 ? 'disabled' : ''}>KLIK ORDER</button>
+                    </div>
+                `;
+                card.querySelector(".btn-detail").addEventListener("click", () => bukaModal(p));
+                
+                // PANGGIL bukaPaymentModal UNTUK ORDER
+                if (p.stok > 0) {
+                    card.querySelector(".btn-order").addEventListener("click", () => bukaPaymentModal(p));
+                }
+                produkGrid.appendChild(card);
+            });
+        }
+    });
+}
+
+// --- FUNGSI PENCARIAN (FILTER) ---
+function filterProduk() {
+    const searchTerm = document.getElementById('searchBox').value.toLowerCase().trim();
+    if (searchTerm === "") {
+        renderProduk(produkList);
+        return;
+    }
+    const filteredList = produkList.filter(p => 
+        p.nama.toLowerCase().includes(searchTerm) || 
+        p.kategori.toLowerCase().includes(searchTerm)
+    );
+    renderProduk(filteredList);
+}
+
+document.getElementById('searchBox').addEventListener('keyup', filterProduk);
+
+
+// --- FUNGSIONALITAS MODAL DETAIL (Lama) ---
+function bukaModal(p) {
+    document.getElementById("modalImg").src = p.gambar;
+    document.getElementById("modalNama").textContent = p.nama;
+    document.getElementById("modalIsi").innerHTML = p.detail;
+    document.getElementById("modalHarga").textContent = `Harga: Rp ${p.harga.toLocaleString('id-ID')}`;
+    const modal = document.getElementById("detailModal");
+    modal.style.display = "flex";
+    document.body.classList.add("modal-open");
+    setTimeout(() => modal.classList.add("show"), 10);
+}
+
+function tutupModal() {
+    const modal = document.getElementById("detailModal");
+    modal.classList.remove("show");
+    setTimeout(() => {
+        modal.style.display = "none";
+        document.body.classList.remove("modal-open");
+    }, 200);
+}
+
+// Panggil pertama kali untuk merender semua produk
+renderProduk(produkList);
+</script>
+</body>
+</html>
