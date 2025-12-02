@@ -309,17 +309,11 @@ body.modal-open { overflow: hidden; }
 </div>
 
 <script>
-// ==========================================================
-// >>> KREDENSIAL TELEGRAM YANG SUDAH TERVERIFIKASI <<<
-// ==========================================================
 const QRIS_LINK = "https://petarukanstoreimage.wordpress.com/wp-content/uploads/2025/12/6159183527572867881.jpg";
-// TOKEN BOT Anda (dari Gambar 675)
+// KREDENSIAL TELEGRAM YANG SUDAH TERVERIFIKASI
 const TELEGRAM_BOT_TOKEN = "85987998682:AAFSSTgkqJ3C8PLFknx2Rw9YS6ZUQf4RPvk"; 
-// ID Grup Utama PETARUKAN_STORE (Koreksi format -100 dari link t.me/c/)
 const TELEGRAM_CHAT_ID = "-1002330932094";  
-// ID Topik TRANSAKSI (Angka /51 dari link t.me/c/)
 const TELEGRAM_THREAD_ID = "51";          
-// ==========================================================
 
 let countdownInterval;
 let selectedProduct; 
@@ -357,7 +351,7 @@ function dismissAlert() {
 }
 document.addEventListener('DOMContentLoaded', checkAlertStatus);
 
-// --- FUNGSI TELEGRAM (MENDUKUNG TOPIK) ---
+// --- FUNGSI TELEGRAM (REVISI FINAL) ---
 function sendTelegramNotification(message) {
     if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
         console.error("Gagal mengirim Telegram: Kredensial BOT atau CHAT ID belum diatur.");
@@ -405,13 +399,11 @@ function startCountdown(duration, display) {
         if (--timer < 0) {
             clearInterval(countdownInterval);
             display.textContent = "Waktu Habis!";
-            // Opsional: nonaktifkan tombol laporan jika waktu habis
-            // document.querySelector('#paymentModal .btn-order').disabled = true;
         }
     }, 1000);
 }
 
-// --- FUNGSI MODAL PEMBAYARAN & LAPORAN TELEGRAM YANG DIREVISI (Termasuk Input Nomor) ---
+// --- FUNGSI MODAL PEMBAYARAN & LAPORAN TELEGRAM (REVISI FINAL NOMOR PELANGGAN) ---
 function konfirmasiSelesai() {
     if (!selectedProduct) {
         alert("Terjadi kesalahan produk. Mohon ulangi proses order.");
@@ -419,12 +411,12 @@ function konfirmasiSelesai() {
     }
 
     const customerNumberInput = document.getElementById('customerNumber');
-    const customerNumber = customerNumberInput ? customerNumberInput.value.trim() : '';
+    const customerNumber = customerNumberInput ? customerNumberInput.value.trim() : ''; 
 
     // Validasi: Pastikan Nomor Pelanggan Diisi
-    if (customerNumber.length < 9 || isNaN(customerNumber)) { // Minimal 9 digit dan harus angka
+    if (customerNumber.length < 9 || isNaN(customerNumber) || customerNumber === '') { 
         alert("Mohon masukkan Nomor XL/Axis pelanggan yang valid (minimal 9 digit angka).");
-        customerNumberInput.focus();
+        if (customerNumberInput) customerNumberInput.focus();
         return;
     }
 
@@ -434,7 +426,7 @@ function konfirmasiSelesai() {
     const timeStr = today.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
     const hargaFormatted = selectedProduct.harga.toLocaleString('id-ID');
 
-    // 1. SIAPKAN PESAN UNTUK BOT TELEGRAM ADMIN (MENAMBAH NOMOR PELANGGAN)
+    // 1. SIAPKAN PESAN UNTUK BOT TELEGRAM ADMIN
     const telegramMessage = `
 *🔔 KLAIM PEMBAYARAN BARU!*
 
@@ -444,9 +436,9 @@ Pembeli mengklaim telah membayar pesanan:
 ➡️ *HARGA:* Rp ${hargaFormatted}
 ➡️ *WAKTU KLAIM:* ${timeStr}
 
-*PROSES VALIDASI:*
+*TINDAK LANJUT ADMIN:*
 1. Segera cek mutasi/laporan QRIS untuk transaksi sebesar *Rp ${hargaFormatted}*.
-2. Jika Transaksi Masuk, segera proses pengisian paket ke *Nomor: ${customerNumber}*.
+2. Jika terverifikasi, segera proses pengisian paket ke *Nomor: ${customerNumber}*.
     `.trim();
 
     // KIRIM NOTIFIKASI KE BOT TELEGRAM
